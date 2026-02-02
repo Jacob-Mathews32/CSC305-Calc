@@ -172,6 +172,54 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     });
   }
 
+  void _square() {
+    try {
+      setState(() {
+        _errorMessage = '';
+        if (_expression.isEmpty) {
+          return;
+        }
+
+        final expression = Expression.parse(_expression);
+        final evaluator = ExpressionEvaluator();
+        final result = evaluator.eval(expression, {});
+
+        // Check for infinity or NaN
+        if (result is double && (result.isInfinite || result.isNaN)) {
+          _errorMessage = 'Error: Invalid calculation';
+          _display = 'Error';
+          return;
+        }
+
+        // Square the result
+        final squared = result * result;
+
+        // Format result
+        String formattedResult;
+        if (squared is double) {
+          if (squared == squared.toInt()) {
+            formattedResult = squared.toInt().toString();
+          } else {
+            formattedResult = squared
+                .toStringAsFixed(10)
+                .replaceAll(RegExp(r'0+$'), '')
+                .replaceAll(RegExp(r'\.$'), '');
+          }
+        } else {
+          formattedResult = squared.toString();
+        }
+
+        _expression = '($_expression)² = $formattedResult';
+        _updateDisplay();
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error: Invalid expression';
+        _display = 'Error';
+      });
+    }
+  }
+
   Widget _buildButton(
     String label,
     VoidCallback onPressed, {
@@ -271,7 +319,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
             Expanded(
               child: Column(
                 children: [
-                  // Row 1: C, DEL, /
+                  // Row 1: C, DEL, x², /
                   Row(
                     children: [
                       _buildButton(
@@ -285,6 +333,13 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                         'DEL',
                         _delete,
                         backgroundColor: Colors.orange[400],
+                        textColor: Colors.white,
+                        fontSize: buttonFontSize,
+                      ),
+                      _buildButton(
+                        'x²',
+                        _square,
+                        backgroundColor: Colors.purple[400],
                         textColor: Colors.white,
                         fontSize: buttonFontSize,
                       ),
